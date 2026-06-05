@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "458724976161",
+    "project_id": "cozzycruise-61c4b",
+    "storage_bucket": "cozzycruise-61c4b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458724976161:android:22872bf356d1d5d4a16560",
+        "android_client_info": {
+          "package_name": "com.macrasystems.cozzy_cruise"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "458724976161-g8pck8oaspj1agda3hhsd790s9s19530.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1tisBJO4mY4xxcGQiM6K6l_EWp5tIdZI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "458724976161-g8pck8oaspj1agda3hhsd790s9s19530.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
