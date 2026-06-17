@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
@@ -21,10 +20,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.macrasystems.cozzy_cruise"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -40,8 +36,11 @@ android {
         }
     }
 
-    packagingOptions {
-        exclude "META-INF/DEPENDENCIES"
+    // ✅ FIXED: Kotlin DSL packaging block
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+        }
     }
 }
 

@@ -1,5 +1,6 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cozzy_cruise/utils/responsive.dart';
 
@@ -8,6 +9,14 @@ const Color kBeige = Color(0xFFFDF8EE);
 const Color kBlack = Color(0xFF111111);
 const Color kGray = Color(0xFFBDBDBD);
 const Color kWhite = Color(0xFFFFFFFF);
+
+/// Wraps the picked XFile together with its bytes so we only ever read
+/// the file once, and so display works the same on web and native.
+class _PickedImage {
+  final XFile file;
+  final Uint8List bytes;
+  const _PickedImage(this.file, this.bytes);
+}
 
 class ValidationPage extends StatefulWidget {
   const ValidationPage({super.key});
@@ -28,37 +37,39 @@ class _ValidationPageState extends State<ValidationPage> {
   final TextEditingController carColorController = TextEditingController();
 
   // 🧾 DOCUMENTS
-  File? idFront;
-  File? idBack;
-  File? selfie;
-  File? driverLicense;
-  File? insurance;
-  File? logBook; // ✅ FIXED LOGBOOK
-  File? psvLicense;
+  _PickedImage? idFront;
+  _PickedImage? idBack;
+  _PickedImage? selfie;
+  _PickedImage? driverLicense;
+  _PickedImage? insurance;
+  _PickedImage? logBook; // ✅ FIXED LOGBOOK
+  _PickedImage? psvLicense;
 
   // 🚗 CAR IMAGES
-  File? carFront;
-  File? carBack;
-  File? interiorFront;
-  File? interiorBack;
+  _PickedImage? carFront;
+  _PickedImage? carBack;
+  _PickedImage? interiorFront;
+  _PickedImage? interiorBack;
 
   // ---------------- PICKERS ----------------
 
-  Future<void> pickImage(Function(File) onPicked) async {
+  Future<void> pickImage(Function(_PickedImage) onPicked) async {
     final picked = await _picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      onPicked(File(picked.path));
+      final bytes = await picked.readAsBytes();
+      onPicked(_PickedImage(picked, bytes));
     }
   }
 
-  Future<void> takeSelfie(Function(File) onPicked) async {
+  Future<void> takeSelfie(Function(_PickedImage) onPicked) async {
     final picked = await _picker.pickImage(
       source: ImageSource.camera,
       preferredCameraDevice: CameraDevice.front,
       imageQuality: 80,
     );
     if (picked != null) {
-      onPicked(File(picked.path));
+      final bytes = await picked.readAsBytes();
+      onPicked(_PickedImage(picked, bytes));
     }
   }
 
@@ -77,10 +88,7 @@ class _ValidationPageState extends State<ValidationPage> {
           decoration: BoxDecoration(
             color: const Color(0xFFFFFCF4),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: const Color(0xFFE8DEC7),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFE8DEC7), width: 1),
             boxShadow: [
               BoxShadow(
                 color: kBlack.withValues(alpha: 0.08),
@@ -167,7 +175,7 @@ class _ValidationPageState extends State<ValidationPage> {
     required String title,
     required String subtitle,
     required IconData icon,
-    required File? image,
+    required _PickedImage? image,
     required VoidCallback onPick,
     bool isSelfie = false,
     bool optional = false,
@@ -304,7 +312,13 @@ class _ValidationPageState extends State<ValidationPage> {
                       : Stack(
                           fit: StackFit.expand,
                           children: [
-                            Image.file(image, fit: BoxFit.cover),
+                            Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: Image.memory(
+                                image.bytes,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                             Positioned(
                               right: 10,
                               top: 10,
@@ -376,6 +390,12 @@ class _ValidationPageState extends State<ValidationPage> {
 
     setState(() => loading = true);
 
+    // TODO: replace this simulated delay with a real upload once the
+    // backend is ready. At that point, send `image.bytes` for each field
+    // (idFront, idBack, selfie, driverLicense, insurance, logBook,
+    // psvLicense, carFront, carBack, interiorFront, interiorBack) via
+    // multipart/form-data, e.g. http.MultipartFile.fromBytes(...). Bytes
+    // work the same on web and native, so no changes will be needed above.
     await Future.delayed(const Duration(seconds: 2));
 
     setState(() => loading = false);
@@ -386,7 +406,7 @@ class _ValidationPageState extends State<ValidationPage> {
       context,
     ).showSnackBar(const SnackBar(content: Text("Submitted successfully")));
 
-    Navigator.pop(context);
+    context.go('/Home');
   }
 
   // ---------------- UI ----------------
@@ -448,8 +468,7 @@ class _ValidationPageState extends State<ValidationPage> {
               subtitle: "Upload license",
               icon: Icons.badge,
               image: driverLicense,
-              onPick: () =>
-                  pickImage((f) => setState(() => driverLicense = f)),
+              onPick: () => pickImage((f) => setState(() => driverLicense = f)),
             ),
             imageCard(
               title: "Insurance",
@@ -500,16 +519,14 @@ class _ValidationPageState extends State<ValidationPage> {
               subtitle: "Front seats",
               icon: Icons.event_seat,
               image: interiorFront,
-              onPick: () =>
-                  pickImage((f) => setState(() => interiorFront = f)),
+              onPick: () => pickImage((f) => setState(() => interiorFront = f)),
             ),
             imageCard(
               title: "Interior Back",
               subtitle: "Back seats",
               icon: Icons.event_seat,
               image: interiorBack,
-              onPick: () =>
-                  pickImage((f) => setState(() => interiorBack = f)),
+              onPick: () => pickImage((f) => setState(() => interiorBack = f)),
             ),
           ]),
 

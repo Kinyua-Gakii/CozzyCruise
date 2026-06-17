@@ -3,10 +3,67 @@ import 'package:flutter/material.dart';
 const Color appYellow = Color(0xFFF6C945);
 const Color appBlack = Color(0xFF111111);
 
-class PersonalInformationPage extends StatelessWidget {
+class PersonalInformationPage extends StatefulWidget {
   final Map<String, dynamic>? profile;
 
   const PersonalInformationPage({super.key, this.profile});
+
+  @override
+  State<PersonalInformationPage> createState() =>
+      _PersonalInformationPageState();
+}
+
+class _PersonalInformationPageState extends State<PersonalInformationPage> {
+  bool isEditing = false;
+
+  late final TextEditingController nameController;
+  late final TextEditingController phoneController;
+  late final TextEditingController emailController;
+  late final TextEditingController idNumberController;
+  late final TextEditingController addressController;
+  late final TextEditingController dobController;
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.profile?["name"] ?? "");
+    phoneController = TextEditingController(
+      text: widget.profile?["phone"] ?? "",
+    );
+    emailController = TextEditingController(
+      text: widget.profile?["email"] ?? "",
+    );
+    idNumberController = TextEditingController(
+      text: widget.profile?["id_number"] ?? "",
+    );
+    addressController = TextEditingController(
+      text: widget.profile?["address"] ?? "",
+    );
+    dobController = TextEditingController(text: widget.profile?["dob"] ?? "");
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    idNumberController.dispose();
+    addressController.dispose();
+    dobController.dispose();
+    super.dispose();
+  }
+
+  void _handleButtonTap() {
+    if (isEditing) {
+      // TODO: persist the updated values once the backend is ready, e.g.
+      // send {name: nameController.text, phone: phoneController.text, ...}
+      // to your API. For now the values just stay in local state.
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Information saved")));
+    }
+    setState(() => isEditing = !isEditing);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,12 +81,12 @@ class PersonalInformationPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              infoField('Full Name', profile?["name"] ?? "Not provided"),
-              infoField('Phone Number', profile?["phone"] ?? "Not provided"),
-              infoField('Email Address', profile?["email"] ?? "Not provided"),
-              infoField('ID Number', profile?["id_number"] ?? "Not provided"),
-              infoField('Address', profile?["address"] ?? "Not provided"),
-              infoField('Date of Birth', profile?["dob"] ?? "Not provided"),
+              infoField('Full Name', nameController),
+              infoField('Phone Number', phoneController),
+              infoField('Email Address', emailController),
+              infoField('ID Number', idNumberController),
+              infoField('Address', addressController),
+              infoField('Date of Birth', dobController),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -42,10 +99,10 @@ class PersonalInformationPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-                  onPressed: () {},
-                  child: const Text(
-                    'Edit Information',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                  onPressed: _handleButtonTap,
+                  child: Text(
+                    isEditing ? 'Save Information' : 'Edit Information',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -56,14 +113,21 @@ class PersonalInformationPage extends StatelessWidget {
     );
   }
 
-  Widget infoField(String label, String value) {
+  Widget infoField(String label, TextEditingController controller) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: isEditing ? 6 : 14,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(
+          color: isEditing
+              ? appYellow.withValues(alpha: 0.5)
+              : Colors.grey.withValues(alpha: 0.15),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,14 +142,29 @@ class PersonalInformationPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: appBlack,
-            ),
-          ),
+          isEditing
+              ? TextField(
+                  controller: controller,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: appBlack,
+                  ),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    hintText: 'Enter value',
+                  ),
+                )
+              : Text(
+                  controller.text.isEmpty ? "Not provided" : controller.text,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: appBlack,
+                  ),
+                ),
         ],
       ),
     );
